@@ -1,3 +1,12 @@
+# AWS CDK Wordpress ECS
+
+With this repository it is possible to use AWS CDK to deploy a VPC with public and private subnets. In the public subnets a loadbalancer will be deployed. In the private subnets EC2 host via a AUTOSCALING group is deployed. Also an AURORA Serverless database cluster is deployed in the private subnets. The EC2 hosts are used to create a ECS Cluster to deploy a wordpress container (2x) from docker hub on. 
+
+# TO DO's:
+- Create EFS share for wordpress files
+- Allow security group of ECS EC2 host to connect to Aurora database
+- Add diagram
+
 # Useful commands
 
  * `npm run build`   compile typescript to js
