@@ -5,6 +5,7 @@ import ecs_patterns = require('@aws-cdk/aws-ecs-patterns');
 import { CfnOutput, Construct, Stack, StackProps } from '@aws-cdk/core';
 import { CfnDBCluster, CfnDBSubnetGroup } from '@aws-cdk/aws-rds';
 import cdk = require('@aws-cdk/core');
+import { CfnFileSystem, CfnMountTarget } from '@aws-cdk/aws-efs';
 
 export class CdkWordpressEcsStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -14,6 +15,11 @@ export class CdkWordpressEcsStack extends cdk.Stack {
     const vpc = new ec2.Vpc(this, "MyVpc", {
       maxAzs: 3, // Default is all AZs in region
       cidr: '10.0.0.0/16',
+    });
+
+    const dbSecurityGroup = new ec2.SecurityGroup(this, "AuroraSG", {
+      vpc: vpc,
+      description: 'Aurora DB Security Group'
     });
 
     const subnetIds: string[] = [];
@@ -36,6 +42,7 @@ export class CdkWordpressEcsStack extends cdk.Stack {
       masterUserPassword: 'wordpress',
       port: 3306,
       dbSubnetGroupName: dbSubnetGroup.dbSubnetGroupName,
+      vpcSecurityGroupIds: [dbSecurityGroup.securityGroupId],
       scalingConfiguration: {
         autoPause: true,
         maxCapacity: 2,
@@ -52,6 +59,16 @@ export class CdkWordpressEcsStack extends cdk.Stack {
       value: auroraEndpoint
     }); 
 
+    const efs = new CfnFileSystem(this, 'EcsEfs', {
+      encrypted: true
+    });
+
+    const efs_mount1 = new CfnMountTarget(this, 'EcsEfsMount', {
+      fileSystemId: efs.logicalId,
+      subnetId: vpc.privateSubnets[0].subnetId,
+      securityGroups: [dbSecurityGroup.securityGroupId]
+    });
+
     const asg = new autoscaling.AutoScalingGroup(this, 'MyFleet', {
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
       machineImage: new ecs.EcsOptimizedAmi(),
@@ -65,6 +82,7 @@ export class CdkWordpressEcsStack extends cdk.Stack {
     });
 
     cluster.addAutoScalingGroup(asg);
+    asg.connections.allowTo(dbSecurityGroup, ec2.Port.tcp(3306), "allow ecs to connect to aurora")
 
     new ecs_patterns.ApplicationLoadBalancedEc2Service(this, 'Service', {
       cluster,
@@ -80,7 +98,6 @@ export class CdkWordpressEcsStack extends cdk.Stack {
       },
       desiredCount: 2,
     });
+    cluster.connections.addSecurityGroup(dbSecurityGroup)
   }
 }
-
-// Manually add ECS SecurityGroup to Access Aurora Cluster

@@ -22,6 +22,10 @@
   },
   "dependencies": {
     "@aws-cdk/aws-autoscaling": "^1.18.0",
+    "@aws-cdk/aws-ecs": "^1.18.0",
+    "@aws-cdk/aws-ecs-patterns": "^1.18.0",
+    "@aws-cdk/aws-efs": "^1.18.0",
+    "@aws-cdk/aws-rds": "^1.18.0",
     "@aws-cdk/core": "^1.18.0",
     "source-map-support": "^0.5.16"
   }
