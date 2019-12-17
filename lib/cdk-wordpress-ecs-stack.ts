@@ -57,14 +57,14 @@ export class CdkWordpressEcsStack extends cdk.Stack {
 
     new CfnOutput(this, 'AuroraClusterEndPoint', {
       value: auroraEndpoint
-    }); 
+    });
 
     const efs = new CfnFileSystem(this, 'EcsEfs', {
       encrypted: true
     });
-
+    
     const efs_mount1 = new CfnMountTarget(this, 'EcsEfsMount', {
-      fileSystemId: efs.logicalId,
+      fileSystemId: 'fs-dff59514',
       subnetId: vpc.privateSubnets[0].subnetId,
       securityGroups: [dbSecurityGroup.securityGroupId]
     });
