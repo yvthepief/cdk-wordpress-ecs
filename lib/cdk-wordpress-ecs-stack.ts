@@ -60,9 +60,12 @@ export class CdkWordpressEcsStack extends cdk.Stack {
     });
 
     const efs = new CfnFileSystem(this, 'EcsEfs', {
-      encrypted: true
+      encrypted: true,
     });
-    
+    new CfnOutput(this, 'EfsFileSystemId', {
+      value: efs.getAtt('FileSystemId')
+    });
+
     const efs_mount1 = new CfnMountTarget(this, 'EcsEfsMount', {
       fileSystemId: 'fs-dff59514',
       subnetId: vpc.privateSubnets[0].subnetId,
@@ -84,7 +87,7 @@ export class CdkWordpressEcsStack extends cdk.Stack {
     cluster.addAutoScalingGroup(asg);
     asg.connections.allowTo(dbSecurityGroup, ec2.Port.tcp(3306), "allow ecs to connect to aurora")
 
-    new ecs_patterns.ApplicationLoadBalancedEc2Service(this, 'Service', {
+    new ecs_patterns.ApplicationLoadBalanceAdEc2Service(this, 'Service', {
       cluster,
       memoryLimitMiB: 1024,
       taskImageOptions: {
